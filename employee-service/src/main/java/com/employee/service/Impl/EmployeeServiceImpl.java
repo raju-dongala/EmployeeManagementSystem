@@ -18,6 +18,7 @@ import com.employee.mapper.EmployeeMapper;
 import com.employee.repository.EmployeeRepository;
 import com.employee.service.EmployeeService;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -115,6 +116,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 	
 	@Override
+	@CircuitBreaker(
+	        name = "department-service",
+	        fallbackMethod = "getEmployeeWithDepartmentFallback"
+	)
 	public EmployeeDepartmentResponse getEmployeeWithDepartment(Long id) {
 
 	    Employee employee = employeeRepository.findById(id)
@@ -125,6 +130,30 @@ public class EmployeeServiceImpl implements EmployeeService {
 	    DepartmentResponse department =
 	            departmentClient.getDepartmentByCode(
 	                    employee.getDepartmentCode());
+
+	    return EmployeeDepartmentResponse.builder()
+	            .employee(employeeMapper.toResponse(employee))
+	            .department(department)
+	            .build();
+	}
+	
+	
+	public EmployeeDepartmentResponse getEmployeeWithDepartmentFallback(
+	        Long id,
+	        Exception exception) {
+
+	    Employee employee = employeeRepository.findById(id)
+	            .orElseThrow(() ->
+	                    new EmployeeNotFoundException(
+	                            "Employee not found with ID : " + id));
+
+	    DepartmentResponse department = DepartmentResponse.builder()
+	            .departmentCode("N/A")
+	            .departmentName("Department Service Unavailable")
+	            .location("N/A")
+	            .headOfDepartment("N/A")
+	            .status("UNAVAILABLE")
+	            .build();
 
 	    return EmployeeDepartmentResponse.builder()
 	            .employee(employeeMapper.toResponse(employee))

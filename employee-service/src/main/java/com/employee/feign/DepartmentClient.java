@@ -7,8 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import com.employee.dto.response.DepartmentResponse;
 
 @FeignClient(
-        name = "department-service",
-        url = "${department.service.url}"
+        name = "department-service"
 )
 public interface DepartmentClient {
 

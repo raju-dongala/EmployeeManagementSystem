@@ -23,4 +23,5 @@ public interface EmployeeService {
 	EmployeeResponse getEmployeeByEmail(String email);
 	
     EmployeeDepartmentResponse getEmployeeWithDepartment(Long id);
+    
 }
