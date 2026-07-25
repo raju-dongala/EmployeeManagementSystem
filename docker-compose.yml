@@ -1,0 +1,45 @@
+services:
+
+  discovery-server:
+    image: discovery-server:1.0
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    networks:
+      - spring-microservices-network
+
+  employee-service:
+    image: employee-service:1.0
+    container_name: employee-service
+    ports:
+      - "8081:8081"
+    networks:
+      - spring-microservices-network
+    depends_on:
+      - discovery-server
+
+  department-service:
+    image: department-service:1.0
+    container_name: department-service
+    ports:
+      - "8082:8082"
+    networks:
+      - spring-microservices-network
+    depends_on:
+      - discovery-server
+
+  api-gateway:
+    image: api-gateway:1.0
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - spring-microservices-network
+    depends_on:
+      - discovery-server
+      - employee-service
+      - department-service
+
+networks:
+  spring-microservices-network:
+    driver: bridge
