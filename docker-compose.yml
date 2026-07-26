@@ -14,6 +14,8 @@ services:
       - spring-microservices-network
 
   discovery-server:
+    build:
+      context: ./discovery-server
     image: discovery-server:1.0
     container_name: discovery-server
     ports:
@@ -22,6 +24,8 @@ services:
       - spring-microservices-network
 
   employee-service:
+    build:
+      context: ./employee-service
     image: employee-service:1.0
     container_name: employee-service
     ports:
@@ -35,6 +39,8 @@ services:
       - mysql
 
   department-service:
+    build:
+      context: ./department-service
     image: department-service:1.0
     container_name: department-service
     ports:
@@ -48,6 +54,8 @@ services:
       - mysql
 
   api-gateway:
+    build:
+      context: ./api-gateway
     image: api-gateway:1.0
     container_name: api-gateway
     ports:
