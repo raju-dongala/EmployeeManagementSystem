@@ -6,4 +6,4 @@ COPY target/api-gateway-3.5.4.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xms128m", "-Xmx256m", "-jar", "app.jar"]
