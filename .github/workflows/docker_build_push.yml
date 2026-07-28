@@ -1,9 +1,19 @@
-name: Publish Docker Image to GHCR
+name: Build and Publish Docker Image to GHCR
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select the microservice name"
+        required: true
+        default: employee-service
+        type: choice
+        options:
+          - employee-service
+          - discovery-server
+          - department-service
+          - api-gateway
+    
 
 jobs:
   publish-docker:
@@ -24,7 +34,7 @@ jobs:
 
       - name: Build Java application with Maven
         run: mvn clean package -DskipTests
-        working-directory: ./employee-service
+        working-directory: ./${{ inputs.environment }}
 
       - name: Set lowercase image name
         id: image
@@ -40,6 +50,6 @@ jobs:
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./employee-service
+          context: ./${{ inputs.environment }}
           push: true
           tags: ${{ steps.image.outputs.tag }}
