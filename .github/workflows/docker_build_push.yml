@@ -24,6 +24,7 @@ jobs:
 
       - name: Build Java application with Maven
         run: mvn clean package -DskipTests
+        working-directory: ./employee-service
 
       - name: Set lowercase image name
         id: image
