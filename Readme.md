@@ -86,3 +86,7 @@ The project consists of the following microservices:
    ```bash
    git clone https://github.com/raju-dongala/EmployeeManagementSystem.git
    cd EmployeeManagementSystem
+
+   #http://localhost:8081/api/v1/departments
+   #http://localhost:8082/api/v1/employees
+   #http://localhost:8080/api/v1/employees/1/department
