@@ -29,7 +29,7 @@ services:
     image: employee-service:1.0
     container_name: employee-service
     ports:
-      - "8081:8081"
+      - "8082:8082"
     environment:
       SPRING_PROFILES_ACTIVE: aws
     networks:
@@ -44,7 +44,7 @@ services:
     image: department-service:1.0
     container_name: department-service
     ports:
-      - "8082:8082"
+      - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: aws
     networks:

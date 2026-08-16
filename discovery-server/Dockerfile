@@ -6,4 +6,4 @@ COPY target/discovery-server-3.5.4.jar app.jar
 
 EXPOSE 8761
 
-ENTRYPOINT ["java", "-Xms128m", "-Xmx256m", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
