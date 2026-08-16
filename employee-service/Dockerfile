@@ -2,7 +2,7 @@ FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
-COPY target/employee-service-1.0.0.jar app.jar
+COPY target/employee-service-3.5.4.jar app.jar
 
 EXPOSE 8082
 
