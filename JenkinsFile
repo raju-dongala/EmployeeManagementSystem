@@ -1,0 +1,349 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER = 'C:\\Users\\rajud\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        DOCKER_COMPOSE = 'C:\\Users\\rajud\\.docker\\cli-plugins\\docker-compose.exe'
+    }
+
+    stages {
+
+        // =========================================================
+        // 1. CHECKOUT
+        // =========================================================
+        stage('Checkout') {
+            steps {
+                echo '===== CHECKOUT SOURCE CODE ====='
+
+                git(
+                    url: 'https://github.com/raju-dongala/EmployeeManagementSystem.git',
+                    branch: 'main',
+                    credentialsId: 'github-credentials'
+                )
+            }
+        }
+
+        // =========================================================
+        // 2. VERIFY TOOLS
+        // =========================================================
+        stage('Verify Tools') {
+            steps {
+                echo '===== VERIFY TOOLS ====='
+
+                bat '''
+                    echo ==============================
+                    echo JAVA
+                    echo ==============================
+                    java -version
+
+                    echo ==============================
+                    echo MAVEN
+                    echo ==============================
+                    mvn -version
+
+                    echo ==============================
+                    echo GIT
+                    echo ==============================
+                    git --version
+
+                    echo ==============================
+                    echo DOCKER
+                    echo ==============================
+                    docker --version
+
+                    echo ==============================
+                    echo DOCKER COMPOSE
+                    echo ==============================
+                    "%DOCKER_COMPOSE%" version
+                '''
+            }
+        }
+
+        // =========================================================
+        // 3. CHECK PROJECT STRUCTURE
+        // =========================================================
+        stage('Check Project Structure') {
+            steps {
+                echo '===== CHECK PROJECT STRUCTURE ====='
+
+                bat '''
+                    echo ==============================
+                    echo CURRENT DIRECTORY
+                    echo ==============================
+                    cd
+
+                    echo ==============================
+                    echo PROJECT FILES
+                    echo ==============================
+                    dir
+
+                    echo ==============================
+                    echo POM FILES
+                    echo ==============================
+                    dir /s /b pom.xml
+
+                    echo ==============================
+                    echo DOCKERFILES
+                    echo ==============================
+                    dir /s /b Dockerfile
+
+                    echo ==============================
+                    echo DOCKER COMPOSE
+                    echo ==============================
+                    dir /s /b docker-compose.yml
+                '''
+            }
+        }
+
+        // =========================================================
+        // 4. BUILD DISCOVERY SERVER
+        // =========================================================
+        stage('Build Discovery Server') {
+            steps {
+                echo '===== BUILD DISCOVERY SERVER ====='
+
+                bat '''
+                    mvn -f discovery-server\\pom.xml clean package -DskipTests
+                '''
+            }
+        }
+
+        // =========================================================
+        // 5. BUILD EMPLOYEE SERVICE
+        // =========================================================
+        stage('Build Employee Service') {
+            steps {
+                echo '===== BUILD EMPLOYEE SERVICE ====='
+
+                bat '''
+                    mvn -f employee-service\\pom.xml clean package -DskipTests
+                '''
+            }
+        }
+
+        // =========================================================
+        // 6. BUILD DEPARTMENT SERVICE
+        // =========================================================
+        stage('Build Department Service') {
+            steps {
+                echo '===== BUILD DEPARTMENT SERVICE ====='
+
+                bat '''
+                    mvn -f department-service\\pom.xml clean package -DskipTests
+                '''
+            }
+        }
+
+        // =========================================================
+        // 7. BUILD API GATEWAY
+        // =========================================================
+        stage('Build API Gateway') {
+            steps {
+                echo '===== BUILD API GATEWAY ====='
+
+                bat '''
+                    mvn -f api-gateway\\pom.xml clean package -DskipTests
+                '''
+            }
+        }
+
+        // =========================================================
+        // 8. VERIFY ALL JAR FILES
+        // =========================================================
+        stage('Verify JAR Files') {
+            steps {
+                echo '===== VERIFY ALL JAR FILES ====='
+
+                bat '''
+                    echo ==============================
+                    echo DISCOVERY SERVER JAR
+                    echo ==============================
+
+                    if not exist discovery-server\\target\\app.jar (
+                        echo ERROR: discovery-server target\\app.jar NOT FOUND
+                        exit /b 1
+                    )
+
+                    dir discovery-server\\target\\app.jar
+
+
+                    echo ==============================
+                    echo EMPLOYEE SERVICE JAR
+                    echo ==============================
+
+                    if not exist employee-service\\target\\app.jar (
+                        echo ERROR: employee-service target\\app.jar NOT FOUND
+                        exit /b 1
+                    )
+
+                    dir employee-service\\target\\app.jar
+
+
+                    echo ==============================
+                    echo DEPARTMENT SERVICE JAR
+                    echo ==============================
+
+                    if not exist department-service\\target\\app.jar (
+                        echo ERROR: department-service target\\app.jar NOT FOUND
+                        exit /b 1
+                    )
+
+                    dir department-service\\target\\app.jar
+
+
+                    echo ==============================
+                    echo API GATEWAY JAR
+                    echo ==============================
+
+                    if not exist api-gateway\\target\\app.jar (
+                        echo ERROR: api-gateway target\\app.jar NOT FOUND
+                        exit /b 1
+                    )
+
+                    dir api-gateway\\target\\app.jar
+
+
+                    echo.
+                    echo ==========================================
+                    echo ALL 4 JAR FILES GENERATED SUCCESSFULLY
+                    echo ==========================================
+                '''
+            }
+        }
+
+        // =========================================================
+        // 9. DOCKER BUILD
+        // =========================================================
+        stage('Docker Build') {
+            steps {
+                echo '===== DOCKER BUILD ====='
+
+                bat '''
+                    "%DOCKER_COMPOSE%" build
+                '''
+            }
+        }
+
+        // =========================================================
+        // 10. DEPLOY
+        // =========================================================
+        stage('Deploy') {
+            steps {
+                echo '===== DEPLOY SERVICES ====='
+
+                bat '''
+                    "%DOCKER_COMPOSE%" up -d
+                '''
+            }
+        }
+
+        // =========================================================
+        // 11. VERIFY CONTAINERS
+        // =========================================================
+       stage('Verify Containers') {
+       steps {
+        echo '===== VERIFY CONTAINERS ====='
+
+        bat '''
+            echo ==============================
+            echo DOCKER VERSION
+            echo ==============================
+
+            "%DOCKER%" --version
+
+            echo.
+            echo ==============================
+            echo ALL RUNNING CONTAINERS
+            echo ==============================
+
+            "%DOCKER%" ps
+
+            echo.
+            echo ==============================
+            echo VERIFY DISCOVERY SERVER
+            echo ==============================
+
+            "%DOCKER%" inspect -f "{{.State.Running}}" discovery-server
+
+            if errorlevel 1 (
+                echo ERROR: discovery-server is not running
+                exit /b 1
+            )
+
+            echo.
+            echo ==============================
+            echo VERIFY EMPLOYEE SERVICE
+            echo ==============================
+
+            "%DOCKER%" inspect -f "{{.State.Running}}" employee-service
+
+            if errorlevel 1 (
+                echo ERROR: employee-service is not running
+                exit /b 1
+            )
+
+            echo.
+            echo ==============================
+            echo VERIFY DEPARTMENT SERVICE
+            echo ==============================
+
+            "%DOCKER%" inspect -f "{{.State.Running}}" department-service
+
+            if errorlevel 1 (
+                echo ERROR: department-service is not running
+                exit /b 1
+            )
+
+            echo.
+            echo ==============================
+            echo VERIFY API GATEWAY
+            echo ==============================
+
+            "%DOCKER%" inspect -f "{{.State.Running}}" api-gateway
+
+            if errorlevel 1 (
+                echo ERROR: api-gateway is not running
+                exit /b 1
+            )
+
+            echo.
+            echo ==========================================
+            echo ALL 4 CONTAINERS ARE RUNNING SUCCESSFULLY
+            echo ==========================================
+        '''
+      }
+     }
+    }
+
+    // =============================================================
+    // POST ACTIONS
+    // =============================================================
+    post {
+
+        success {
+            echo '''
+======================================
+PIPELINE SUCCESS
+======================================
+All JARs generated.
+Docker images built.
+All services deployed.
+======================================
+'''
+        }
+
+        failure {
+            echo '''
+======================================
+PIPELINE FAILED
+======================================
+Check the Console Output.
+======================================
+'''
+        }
+
+        always {
+            echo '===== PIPELINE COMPLETED ====='
+        }
+    }
+}
