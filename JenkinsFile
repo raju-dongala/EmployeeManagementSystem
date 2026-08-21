@@ -210,6 +210,28 @@ pipeline {
                 '''
             }
         }
+        
+      stage('SonarQube Analysis') {
+    steps {
+        echo '===== SONARQUBE ANALYSIS ====='
+
+        withSonarQubeEnv('SonarQube') {
+            bat '''
+                mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+            '''
+        }
+    }
+}
+
+stage('Quality Gate') {
+    steps {
+        echo '===== WAITING FOR SONARQUBE QUALITY GATE ====='
+
+        timeout(time: 5, unit: 'MINUTES') {
+            waitForQualityGate abortPipeline: true
+        }
+    }
+}
 
         // =========================================================
         // 9. DOCKER BUILD
